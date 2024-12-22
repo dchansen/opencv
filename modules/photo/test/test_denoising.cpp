@@ -165,4 +165,23 @@ TEST(Photo_Denoising, speed)
     printf("execution time: %gms\n", t*1000./getTickFrequency());
 }
 
+TEST(Photo_Denoising_Accepts_16Bit, issue_25114)
+{
+    const int imgs_count = 3;
+    string folder = string(cvtest::TS::ptr()->get_data_path()) + "denoising/";
+
+    vector<Mat> original(imgs_count);
+    for (int i = 0; i < imgs_count; i++)
+    {
+        string original_path = format("%slena_noised_gaussian_sigma=20_multi_%d.png", folder.c_str(), i);
+        original[i] = imread(original_path, IMREAD_COLOR);
+        original[i].convertTo(original[i],CV_16U);
+
+        ASSERT_FALSE(original[i].empty()) << "Could not load input image " << original_path;
+    }
+
+    Mat result;
+    fastNlMeansDenoisingMulti(original, result, imgs_count / 2, imgs_count, vector<float>(3,10), 7, 21, NORM_L1);
+}
+
 }} // namespace
